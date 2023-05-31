@@ -481,7 +481,7 @@ def jugadores_ordenados_superan_valor(lista_archivo:dict, numero_ingresado:int):
     '''
     Funcion que ordena los jugadores por posicion, que superan el valor ingresado
     Recibe como dato la lista json y el numero ingresado que luego usara como referencia para evaluar
-    Retorna mensaje con el jugador con mas temporadas obtenidos
+    Retorna mensaje con el jugador con mas temporadas jugadas
     '''
     nombre_jugador = ""
     tiros_de_campo = 0
@@ -613,3 +613,147 @@ def calcular_posicion_jugador(lista_archivo:dict)->str:
     
     return resultado
 # print(calcular_posicion_jugador(lista_archivo))
+
+#Punto extra:
+def determinar_cantidad_posiciones(diccionario_general:dict)->str:
+    '''
+    Funcion que recorre la lista de cada jugador y guarda su posicion para luego mostrar cant total de personas por c/d posicion
+    Recibe como dato el diccionario que contiene a los jugadores con sus estadisticas
+    Retorna un mensaje con las posiciones y cant de personas por cada una 
+    '''
+    diccionario_posiciones = {}
+    flag_primera_base = True
+    flag_primer_alero = True
+    flag_primer_ala_pivot = True
+    flag_primera_escolta = True
+    mensaje = ""
+
+    for diccionarios_jugadores in diccionario_general["jugadores"]:
+        posicion = diccionarios_jugadores["posicion"]
+        
+        match posicion:
+            case "Base":
+                if flag_primera_base:
+                    diccionario_posiciones["Base"] = 1
+                    flag_primera_base = False
+                else:
+                    diccionario_posiciones["Base"] += 1
+            case "Alero":
+                if flag_primer_alero:
+                    diccionario_posiciones["Alero"] = 1
+                    flag_primer_alero = False
+                else:
+                    diccionario_posiciones["Alero"] += 1
+            case "Ala-Pivot":
+                if flag_primer_ala_pivot:
+                    diccionario_posiciones["Ala-Pivot"] = 1
+                    flag_primer_ala_pivot = False
+                else:
+                    diccionario_posiciones["Ala-Pivot"] += 1
+            case "Escolta":
+                if flag_primera_escolta:
+                    diccionario_posiciones["Escolta"] = 1
+                    flag_primera_escolta = False
+                else:
+                    diccionario_posiciones["Escolta"] += 1
+    
+    # print(diccionario_posiciones)
+    for posiciones in diccionario_posiciones:
+        posicion_mensaje = posiciones
+        cantidad_jugadores_posicion = diccionario_posiciones[posiciones]
+        mensaje += f'{posicion_mensaje}: {cantidad_jugadores_posicion}\n'
+        # print(mensaje)
+    mensaje = mensaje[:-1]
+    # print(diccionario_general)
+    return mensaje
+
+# print(determinar_cantidad_posiciones(lista_archivo))
+
+def mostrar_allstar_jugadores(diccionario_general:dict):
+    '''
+    Funcion que muestra la cantidad de premios All-star que recibio cada uno
+    Recibe como dato el diccionario que contiene a cada jugador con sus estadisticas
+    Retorna mensaje con cada jugador y la cantidad de veces que gano el premio(all-star)
+    '''
+    lista_nombres = []
+    lista_allstar = []
+    mensaje = ""
+    contador = 0
+    patron = r"(\d+)\s+veces All-Star"
+    for diccionarios_jugadores in diccionario_general["jugadores"]:
+        
+        logros = diccionarios_jugadores["logros"]
+        # veces_allstar = re.search(patron, logros)
+        # print(veces_allstar.group())
+        
+        for sentecias in logros:
+            veces_allstar = re.search(patron, sentecias)
+            if veces_allstar is not None:
+                numero = veces_allstar.group(1)
+                nombre_jugador = diccionarios_jugadores["nombre"]
+                lista_nombres.append(nombre_jugador)
+                lista_allstar.append(numero)
+                contador += 1
+
+        # print(nombre_jugador)
+    # print(lista_nombres)
+    # print(lista_allstar)
+
+    for indice in range(contador):
+        nombre = lista_nombres[indice]
+        allstar = lista_allstar[indice]
+        mensaje += f'{nombre}({allstar} All-Stars)\n'
+    mensaje = mensaje[:-1]
+    return mensaje
+# print(mostrar_allstar_jugadores(lista_archivo))
+
+estadisticas = ["Jugadores", "Puntos", "Rebotes", "Asistencias", "Robos"]
+def jugador_con_mejores_stats(diccionario_general:dict)->str:
+    nombres = []
+    suma_digitos_sectores = []
+    
+    texto_estadisticas = calcular_posicion_jugador(diccionario_general)
+    # print(texto_estadisticas)
+    lista = texto_estadisticas.split("\n")
+    lista = lista[1:]
+    lista = list(filter(bool, lista))  #para filtra una lista y eliminar los elementos vacios
+    patron = r'^([A-Za-z\s]+)\|'
+    longitud = len(lista)
+    for jugadores in lista:
+        nombre = re.search(patron, jugadores)
+        nombre = nombre.group(1)
+        nombres.append(nombre)
+
+        partes = jugadores.split("|")
+        for digito in partes[1:]:
+            suma_digitos = 0
+            digito_entero = int(digito)
+            suma_digitos += digito_entero
+        suma_digitos_sectores.append(suma_digitos)
+    # print(nombres)
+    # print(suma_digitos_sectores)
+
+    flag = True
+    while flag:
+        flag = False
+        for indice in range(longitud - 1):
+            if suma_digitos_sectores[indice] < suma_digitos_sectores[indice + 1]:
+                suma_digitos_sectores[indice + 1], suma_digitos_sectores[indice] = suma_digitos_sectores[indice], suma_digitos_sectores[indice + 1]
+                nombres[indice + 1], nombres[indice] = nombres[indice], nombres[indice + 1] 
+                flag = True
+    # print(nombres)
+    # print(suma_digitos_sectores)
+    mensaje = f"El jugador con mejores estadisticas en general es: {nombres[0]}"
+    return mensaje
+# print(jugador_con_mejores_stats(lista_archivo))
+
+def mejores_stats_jugadores():
+    print(mostrar_jugador_mayor_rebotes(lista_archivo))
+    print(mostrar_jugador_mayor_tiros(lista_archivo))
+    print(mostrar_jugador_mayor_asistencias(lista_archivo))
+    print(jugador_mayor_cantidad_robos(lista_archivo))
+    print(jugador_mayor_cantidad_bloqueos_totales(lista_archivo))
+    print(mostrar_jugador_mayor_logros(lista_archivo))
+    print(mostrar_jugador_mas_temporadas(lista_archivo))
+    return
+# print(mejores_stats_jugadores())
